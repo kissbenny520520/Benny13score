@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>遊戲記分網頁</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .player-setup, .score-input, .score-table {
+      margin: 20px auto;
+      max-width: 600px;
+    }
+    label, input, button {
+      display: block;
+      margin: 10px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+  </style>
+</head>
+<body>
+  <h1>多人遊戲記分網頁</h1>
+
+  <!-- 玩家設定 -->
+  <section class="player-setup">
+    <h2>設定玩家</h2>
+    <form id="player-setup-form">
+      <label for="players">輸入玩家名稱（以逗號分隔，例如：A,B,C,D）：</label>
+      <input type="text" id="players" required>
+      <button type="submit">開始遊戲</button>
+    </form>
+  </section>
+
+  <!-- 記分區 -->
+  <section class="score-input" style="display: none;">
+    <h2>輸入每場分數</h2>
+    <form id="score-form">
+      <div id="player-scores"></div>
+      <button type="submit">新增比賽結果</button>
+    </form>
+  </section>
+
+  <!-- 分數表 -->
+  <section class="score-table" style="display: none;">
+    <h2>分數表</h2>
+    <table>
+      <thead>
+        <tr id="player-headers"></tr>
+      </thead>
+      <tbody id="score-records"></tbody>
+    </table>
+    <h3>總得分</h3>
+    <ul id="total-scores"></ul>
+  </section>
+
+  <script>
+    const playerSetupForm = document.getElementById('player-setup-form');
+    const scoreForm = document.getElementById('score-form');
+    const playerScoresDiv = document.getElementById('player-scores');
+    const playerHeaders = document.getElementById('player-headers');
+    const scoreRecords = document.getElementById('score-records');
+    const totalScoresList = document.getElementById('total-scores');
+    let players = [];
+    let scores = [];
+
+    // 設定玩家
+    playerSetupForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      players = document.getElementById('players').value.split(',').map(name => name.trim());
+      if (players.length < 3 || players.length > 5) {
+        alert('請輸入3到5位玩家名稱');
+        return;
+      }
+      // 顯示記分區
+      document.querySelector('.player-setup').style.display = 'none';
+      document.querySelector('.score-input').style.display = 'block';
+      document.querySelector('.score-table').style.display = 'block';
+
+      // 初始化記分輸入表單
+      playerScoresDiv.innerHTML = players.map(player => `
+        <label for="${player}">${player}：</label>
+        <input type="number" id="${player}" name="${player}" required>
+      `).join('');
+
+      // 初始化表頭
+      playerHeaders.innerHTML = players.map(player => `<th>${player}</th>`).join('');
+    });
+
+    // 記錄分數
+    scoreForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const currentScores = players.map(player => {
+        const score = parseInt(document.getElementById(player).value, 10);
+        return isNaN(score) ? 0 : score;
+      });
+      scores.push(currentScores);
+
+      // 更新表格
+      const row = document.createElement('tr');
+      row.innerHTML = currentScores.map(score => `<td>${score}</td>`).join('');
+      scoreRecords.appendChild(row);
+
+      // 計算總得分
+      const totalScores = players.map((_, i) => scores.reduce((sum, round) => sum + round[i], 0));
+      totalScoresList.innerHTML = players.map((player, i) => `<li>${player}: ${totalScores[i]}</li>`).join('');
+
+      // 清空輸入欄位
+      scoreForm.reset();
+    });
+  </script>
+</body>
+</html>
